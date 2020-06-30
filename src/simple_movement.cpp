@@ -54,7 +54,9 @@ namespace gazebo
             //Setup of this drone Agent
             name = this->model->GetName();
             fly_to.setModel(this->model);
+            std::cout<<"Model from plugin part :";
 
+            std::cout <<this->model<<std::endl;
             // Listen to the update event. This event is broadcast every
             // simulation iteration.
             this->updateConnection = event::Events::ConnectWorldUpdateBegin(

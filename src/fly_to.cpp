@@ -17,6 +17,8 @@ void FlyTo::execute(const simple_movement::FlyToGoalConstPtr &goal,
 {
   ROS_INFO_STREAM("Got new goal: Fly to (" << goal->pose.pose.position.x << ", " << goal->pose.pose.position.y << ", "
                                            << goal->pose.pose.position.z << ") ");
+  std::cout<<"Model from fly_to part :";
+  std::cout <<this->model<<std::endl;
 
   ros::Rate r(20);
   ignition::math::Pose3<double> actual_goal;
@@ -37,16 +39,16 @@ void FlyTo::execute(const simple_movement::FlyToGoalConstPtr &goal,
   do
   {
     actual_position = this->model->WorldPose();
-    ROS_INFO_STREAM("Publishing goal to (" << actual_goal.Pos() << ") ");
+    // ROS_INFO_STREAM("Publishing goal to (" << actual_goal.Pos() << ") ");
     pub_.publish(goal->pose);
 
     ignition::math::Vector3<double> eulers = actual_position.Rot().Euler();
-    std::cout << eulers << std::endl;
+    // std::cout << eulers << std::endl;
 
     ignition::math::Vector3d velocity;
     velocity = (actual_goal.Pos() - actual_position.Pos()).Normalize() * 5;
-
-    ROS_INFO_STREAM("Distance to goal: " << actual_position.Pos().Distance(actual_goal.Pos()));
+    this->model->SetLinearVel(velocity);
+    // ROS_INFO_STREAM("Distance to goal: " << actual_position.Pos().Distance(actual_goal.Pos()));
     yaw_diff = fabs(atan2(sin(goal_yaw - eulers[2]), cos(goal_yaw - eulers[2])));
 
   } while (actual_position.Pos().Distance(actual_goal.Pos()) > goal->distance_converged); // or yaw_diff > goal->yaw_converged);
