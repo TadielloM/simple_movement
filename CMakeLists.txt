@@ -17,7 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   gazebo_msgs
   gazebo_ros
-  tf
+  tf2
 )
 
 ## System dependencies are found with CMake's conventions

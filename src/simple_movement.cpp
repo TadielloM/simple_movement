@@ -22,6 +22,7 @@ namespace gazebo
         transport::NodePtr gazebo_node_;
         ros::NodeHandle *nh_;
         FlyTo fly_to;
+        ros::Publisher pub;
 
     public:
         //Constructor
@@ -39,11 +40,28 @@ namespace gazebo
             }
             // Create node handle
             nh_ = new ros::NodeHandle("/");
+            this->pub = nh_->advertise<geometry_msgs::PoseStamped>("/position_drone", 1);
         }
 
         //Destructor
         ~BasicMovement()
         {
+        }
+
+        void pubFunc(ignition::math::Pose3<double> actual_position)
+        {
+            geometry_msgs::PoseStamped msg;
+            msg.header.seq = counter_msg++;
+            msg.header.frame_id = "map";
+            msg.pose.position.x = actual_position.Pos().X();
+            msg.pose.position.y = actual_position.Pos().Y();
+            msg.pose.position.z = actual_position.Pos().Z();
+            msg.pose.orientation.w = actual_position.Rot().W();
+            msg.pose.orientation.x = actual_position.Rot().X();
+            msg.pose.orientation.y = actual_position.Rot().Y();
+            msg.pose.orientation.z = actual_position.Rot().Z();
+
+            pub.publish(msg);
         }
 
         //Load
@@ -54,21 +72,23 @@ namespace gazebo
             //Setup of this drone Agent
             name = this->model->GetName();
             fly_to.setModel(this->model);
-            std::cout<<"Model from plugin part :";
+            std::cout << "Model from plugin part :";
 
-            std::cout <<this->model<<std::endl;
+            std::cout << this->model << std::endl;
             // Listen to the update event. This event is broadcast every
             // simulation iteration.
             this->updateConnection = event::Events::ConnectWorldUpdateBegin(
                 std::bind(&BasicMovement::OnUpdate, this));
 
-            std::cout<<"Basic Moviment started!\n";
+            std::cout << "Basic Moviment started!\n";
             //this->n.reset(new ros::NodeHandle("simple_movement_node"));
         }
 
         // Called by the world update start event
         void OnUpdate()
         {
+            ignition::math::Pose3<double> actual_position = this->model->WorldPose();
+            pubFunc(actual_position);
             ros::spinOnce();
         }
 
