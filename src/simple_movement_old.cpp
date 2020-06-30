@@ -47,9 +47,6 @@ namespace gazebo
             nh_ = new ros::NodeHandle("/");
             this->pub = nh_->advertise<geometry_msgs::PoseStamped>("/position_drone", 1);
             this->sub = nh_->subscribe("/next_goal", 100, &BasicMovement::subCallback, this);  
-            
-            FlyTo fly_to;
-
         }
 
         //Destructor

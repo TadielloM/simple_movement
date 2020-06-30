@@ -9,6 +9,8 @@ add_compile_options(-std=c++11)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+  actionlib
+  actionlib_msgs
   rospy
   roscpp
   std_msgs
@@ -66,17 +68,17 @@ find_package( gazebo REQUIRED)
 # )
 
 ## Generate actions in the 'action' folder
-# add_action_files(
-#   FILES
-#   Action1.action
-#   Action2.action
-# )
+add_action_files(
+   FILES
+   FlyTo.action
+)
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs  # Or other packages containing msgs
-# )
+generate_messages(
+   DEPENDENCIES
+   actionlib_msgs
+   geometry_msgs
+ )
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -110,7 +112,7 @@ find_package( gazebo REQUIRED)
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES simple_movement
-#  CATKIN_DEPENDS rospy
+  CATKIN_DEPENDS actionlib_msgs
   DEPENDS 
   	roscpp
   	gazebo_ros
@@ -129,10 +131,21 @@ include_directories(
 
 )
 
+add_library( FlyTo
+src/fly_to.hh
+src/fly_to.cpp
+)
+
 ## Declare a C++ library
 add_library( _simple_movement
    src/simple_movement.cpp
 )
+
+target_link_libraries(_simple_movement
+  FlyTo  
+)
+
+
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
