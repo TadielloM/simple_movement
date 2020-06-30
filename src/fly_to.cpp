@@ -34,7 +34,7 @@ void FlyTo::execute(const simple_movement::FlyToGoalConstPtr &goal,
 
   double goal_roll, goal_pitch, goal_yaw;
   tf2::Matrix3x3(quat).getRPY(goal_roll, goal_pitch, goal_yaw);
-  std::cout<<"Goal orientation: "<<goal_roll<<" "<<goal_pitch<<" "<<goal_yaw<<" "<<"\n";
+  // std::cout<<"Goal orientation: "<<goal_roll<<" "<<goal_pitch<<" "<<goal_yaw<<" "<<"\n";
   ignition::math::Pose3<double> actual_position = this->model->WorldPose();
   float distance_to_goal = 9001; // Distance is over 9000
   float yaw_diff = M_PI;
