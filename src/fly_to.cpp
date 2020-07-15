@@ -17,8 +17,8 @@ void FlyTo::setModel(gazebo::physics::ModelPtr model_){
 void FlyTo::execute(const simple_movement::FlyToGoalConstPtr &goal,
                     actionlib::SimpleActionServer<simple_movement::FlyToAction> *as)
 {
-  ROS_INFO_STREAM("Got new goal: Fly to (" << goal->pose.pose.position.x << ", " << goal->pose.pose.position.y << ", "
-                                           << goal->pose.pose.position.z << ") ");
+  // ROS_INFO_STREAM("Got new goal: Fly to (" << goal->pose.pose.position.x << ", " << goal->pose.pose.position.y << ", "
+  //                                          << goal->pose.pose.position.z << ") ");
 
   ros::Rate r(20);
   ignition::math::Pose3<double> actual_goal;
