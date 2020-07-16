@@ -50,9 +50,15 @@ void FlyTo::execute(const simple_movement::FlyToGoalConstPtr &goal,
     // std::cout << eulers << std::endl;
 
     ignition::math::Vector3d velocity;
-    velocity = (actual_goal.Pos() - actual_position.Pos()).Normalize() * 5;
-    if(actual_position.Pos().Distance(actual_goal.Pos()) > 0)
+    if(actual_position.Pos().Distance(actual_goal.Pos()) > 0.6){
+      velocity = (actual_goal.Pos() - actual_position.Pos()).Normalize() * 5;
       this->model->SetLinearVel(velocity);
+    }
+    else if(actual_position.Pos().Distance(actual_goal.Pos()) > 0.2){
+      velocity = (actual_goal.Pos() - actual_position.Pos()).Normalize();
+      this->model->SetLinearVel(velocity);
+    }
+
     // ROS_INFO_STREAM("Distance to goal: " << actual_position.Pos().Distance(actual_goal.Pos()));
     yaw_diff = goal_yaw - eulers[2];
     ignition::math::Vector3d angular_vel(0,0,(yaw_diff>=0?1:-1)*2);
