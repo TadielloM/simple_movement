@@ -1,20 +1,35 @@
 include "rrt.h"
 
-bool RRT::findTrajectory(std::shared_ptr<octomap::OcTree> otree, const Eigen::Vector4d& current_state,const Eigen::Vector4d& stateto_reach){
-    std::shared_ptr<RRTNode> new_node = std::make_shared<RRTNode>();
-    std::shared_ptr<RRTNode> nearest;
+bool RRT::findTrajectory(std::shared_ptr<octomap::OcTree> otree, std::shared_ptr<point_rtree> octomap_rtree, value_rtree* rrt_rtree,const Eigen::Vector4d& current_state,const Eigen::Vector4d& state_to_reach){
+    
+    bool goal_reached = false;
+    while(!goal_reached){
 
-    do{
-            Eigen::Vector4d offset = sampleNewPoint();
-            new_node->state = current_state + offset;
-            nearest = chooseParent(new_node);
-            new_node->state = restrictDistance(nearest->state, new_node->state);
-            ot_result = otree->search(octomap::point3d(new_node->state[0], new_node->state[1], new_node->state[2]));
-            if (ot_result == NULL)
-                continue;
-    }while(!isInsideBoundaries(new_node->state) or !ot_result or collisionLine(stl_rtree, nearest->state, new_node->state, collision_radius));)
-    new_node->parent_ = nearest;
-    nearest->children_.push_back(new_node);
+        std::shared_ptr<RRTNode> new_node = std::make_shared<RRTNode>();
+        std::shared_ptr<RRTNode> nearest;
+        do{
+                Eigen::Vector4d offset = sampleNewPoint();
+                new_node->state = current_state + offset;
+                nearest = chooseParent(new_node);
+                new_node->state = restrictDistance(nearest->state, new_node->state);
+                ot_result = otree->search(octomap::point3d(new_node->state[0], new_node->state[1], new_node->state[2]));
+                if (ot_result == NULL)
+                    continue;
+        }while(!isInsideBoundaries(new_node->state) or !ot_result or collisionLine(stl_rtree, nearest->state, new_node->state, collision_radius));)
+        new_node->parent_ = nearest;
+        nearest->children_.push_back(new_node);
+        rrt_rtree->insert(std::make_pair(point3d(new_node->state_[0], new_node->state_[1], new_node->state_[2]), new_node));
+
+
+        Eigen::Vector3d point_current(current_state[0], current_state[1], current_state[2]);
+        Eigen::Vector3d point_to_reach(state_to_reach[0], state_to_reach[1], state_to_reach[2]);
+        if((point_to_reach - point_current).norm() < extension_range)
+            if (!collisionLine(otree, point_current, point_to_reach, collision_radius)){
+                rrt_rtree->insert(std::make_pair(point3d(current_state[0], current_state[1], current_state[2]),std::make_shared<RRTNode>()))
+                goal_reached=true;
+            }
+    }
+
 }
     
 

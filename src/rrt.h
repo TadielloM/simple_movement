@@ -23,7 +23,7 @@ class RRT : public std::enable_shared_from_this<RRT>
         std::vector<double> boundary_min (3,-100);
         std::vector<double> boundary_max (3,100);
         float max_sampling_radius = 2; //maximum sampling radius for new point in the RRT
-        float extension_range = 2.5;
+        float extension_range = 2.5;   //Maximum extension of a branch of the rrt
         float collision_radius = 0.5; //The radius in which search collision should be a little be higher than the dimension of the robot
     public:
         Eigen::Vector4d state;
@@ -42,7 +42,7 @@ class RRT : public std::enable_shared_from_this<RRT>
     }
     
     //Find the trajectory from the root of the RRT to the position to reach
-    void findTrajectory(std::shared_ptr<octomap::OcTree> otree, const Eigen::Vector4d& current_state, const Eigen::Vector4d& state_to_reach);
+    void findTrajectory(std::shared_ptr<octomap::OcTree> otree, std::shared_ptr<point_rtree> octomap_rtree, value_rtree* rrt_rtree, const Eigen::Vector4d& current_state, const Eigen::Vector4d& state_to_reach);
 
     //Sample new point for the RRT
     Eigen::Vector4d STLAEPlanner::sampleNewPoint();
