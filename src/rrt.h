@@ -20,10 +20,13 @@ typedef bgi::rtree<point3d, bgi::rstar<16>> point_rtree; //Used to store octomap
 class RRT : public std::enable_shared_from_this<RRT>
 {   
     private:
+        std::vector<double> boundary_min (3,-100);
+        std::vector<double> boundary_max (3,100);
         float max_sampling_radius = 2; //maximum sampling radius for new point in the RRT
-        double extension_range = 2.5;
+        float extension_range = 2.5;
+        float collision_radius = 0.5; //The radius in which search collision should be a little be higher than the dimension of the robot
     public:
-        Eigen::Vector4d state_;
+        Eigen::Vector4d state;
         std::shared_ptr<RRT> parent_;
         std::vector<std::shared_ptr<RRT>> children_;
 
@@ -33,8 +36,8 @@ class RRT : public std::enable_shared_from_this<RRT>
 
     double distance(std::shared_ptr<RRTNode> other)
     {
-        Eigen::Vector3d p3(this->state_[0], this->state_[1], this->state_[2]);
-        Eigen::Vector3d q3(other->state_[0], other->state_[1], other->state_[2]);
+        Eigen::Vector3d p3(this->state[0], this->state[1], this->state[2]);
+        Eigen::Vector3d q3(other->state[0], other->state[1], other->state[2]);
         return (p3 - q3).norm();
     }
     
@@ -45,6 +48,11 @@ class RRT : public std::enable_shared_from_this<RRT>
     Eigen::Vector4d STLAEPlanner::sampleNewPoint();
 
     std::shared_ptr<RRTNode> STLAEPlanner::chooseParent(std::shared_ptr<RRTNode> node, double extension_range);
+    Eigen::Vector4d RRT::restrictDistance(Eigen::Vector4d nearest, Eigen::Vector4d new_pos);
+    point_rtree RRT::getRtree(std::shared_ptr<octomap::OcTree> ot, octomap::point3d min, octomap::point3d max);
+    bool RRT::isInsideBoundaries(Eigen::Vector4d point);
+    bool RRT::collisionLine(std::shared_ptr<point_rtree> octomap_rtree, Eigen::Vector4d p1, Eigen::Vector4d p2,double r);
+    float STLAEPlanner::CylTest_CapsFirst(const octomap::point3d& pt1, const octomap::point3d& pt2, float lsq, float rsq, const octomap::point3d& pt);
 
 };
 
