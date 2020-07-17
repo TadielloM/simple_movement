@@ -56,7 +56,7 @@ class RRT : public std::enable_shared_from_this<RRT>
     bool isInsideBoundaries(Eigen::Vector4d point);
     
     //Check the collision in a certain segment
-    bool collisionLine(std::shared_ptr<point_rtree> octomap_rtree, Eigen::Vector4d p1, Eigen::Vector4d p2,double r);
+    bool collisionLine(std::shared_ptr<point_rtree> octomap_rtree, Eigen::Vector4d p1, Eigen::Vector4d p2,float r);
     float CylTest_CapsFirst(const octomap::point3d& pt1, const octomap::point3d& pt2, float lsq, float rsq, const octomap::point3d& pt);
 
 };

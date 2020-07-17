@@ -116,7 +116,7 @@ point_rtree RRT::getRtree(std::shared_ptr<octomap::OcTree> ot, octomap::point3d 
   {
     if (it->getLogOdds() > 0)
     {
-      octomap_rtree.insert(point(it.getX(), it.getY(), it.getZ()));
+      octomap_rtree.insert(point3d(it.getX(), it.getY(), it.getZ()));
     }
   }
 
