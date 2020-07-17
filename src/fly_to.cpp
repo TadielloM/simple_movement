@@ -84,7 +84,8 @@ void FlyTo::execute(const simple_movement::FlyToGoalConstPtr &goal,
 
 
   std::shared_ptr<RRT> root_(std::make_shared<RRT>(current_state));
-  value_rtree rtree = ;
+  value_rtree rrt_rtree;
+  rrt_rtree.insert(std::make_pair(point3d(current_state[0], current_state[1], current_state[2]), root_));;
   std::shared_ptr<octomap::OcTree> ot = ot_;
   octomap::point3d min(current_state[0] - max_sampling_radius - 0.5,
                        current_state[1] - max_sampling_radius - 0.5,
@@ -94,7 +95,7 @@ void FlyTo::execute(const simple_movement::FlyToGoalConstPtr &goal,
                        current_state[1] + max_sampling_radius + 0.5,
                        current_state[2] + max_sampling_radius + 0.5);
   std::shared_ptr<point_rtree> octomap_rtree = std::make_shared<point_rtree>(getRtree(ot, min, max));
-  nav_msgs::Path path_to_goal = root_->findTrajectory(ot_,octomap_rtree,root_,current_state,state_to_reach);
+  nav_msgs::Path path_to_goal = root_->findTrajectory(ot_,octomap_rtree,&rrt_rtree,current_state,state_to_reach);
 
   // Check if target is reached...
   for(int i=0; i<path_to_goal.poses.size();i++){
