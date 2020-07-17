@@ -126,7 +126,7 @@ include_directories(
 # include
   ${catkin_INCLUDE_DIRS}
   ${GAZEBO_INCLUDE_DIRS}
-
+  ${OCTOMAP_INCLUDE_DIRS}
 )
 
 add_library( FlyTo
@@ -137,6 +137,16 @@ src/fly_to.cpp
 add_library(RRT
 src/rrt.hh
 src/rrt.cpp
+)
+
+target_link_libraries(FlyTo
+  ${catkin_LIBRARIES}
+  ${OCTOMAP_LIBRARIES}
+)
+
+target_link_libraries(RRT
+  ${catkin_LIBRARIES}
+  ${OCTOMAP_LIBRARIES}
 )
 
 
