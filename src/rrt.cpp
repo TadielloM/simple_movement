@@ -1,7 +1,13 @@
 include "rrt.h"
 
-bool RRT::findTrajectory(std::shared_ptr<octomap::OcTree> otree, std::shared_ptr<point_rtree> octomap_rtree, value_rtree* rrt_rtree,const Eigen::Vector4d& current_state,const Eigen::Vector4d& state_to_reach){
+nav_msgs::Path RRT::findTrajectory(std::shared_ptr<octomap::OcTree> otree, std::shared_ptr<point_rtree> octomap_rtree, value_rtree* rrt_rtree,const Eigen::Vector4d& current_state,const Eigen::Vector4d& state_to_reach){
     
+    nav_msgs::Path path;
+    //IF point is unreacheble return 
+    if (!otree->search(octomap::point3d(state_to_reach[0], state_to_reach[1], state_to_reach[2])))
+        return path;
+
+
     bool goal_reached = false;
     while(!goal_reached){
 
@@ -20,16 +26,39 @@ bool RRT::findTrajectory(std::shared_ptr<octomap::OcTree> otree, std::shared_ptr
         nearest->children_.push_back(new_node);
         rrt_rtree->insert(std::make_pair(point3d(new_node->state_[0], new_node->state_[1], new_node->state_[2]), new_node));
 
-
         Eigen::Vector3d point_current(current_state[0], current_state[1], current_state[2]);
         Eigen::Vector3d point_to_reach(state_to_reach[0], state_to_reach[1], state_to_reach[2]);
-        if((point_to_reach - point_current).norm() < extension_range)
+        if((point_to_reach - point_current).norm() < extension_range){
             if (!collisionLine(otree, point_current, point_to_reach, collision_radius)){
                 rrt_rtree->insert(std::make_pair(point3d(current_state[0], current_state[1], current_state[2]),std::make_shared<RRTNode>()))
+                for (int id = 0; n->parent; ++id)
+                {
+                    geometry_msgs::PoseStamped p;
+                    p.pose.position.x = n->pos[0];
+                    p.pose.position.y = n->pos[1];
+                    p.pose.position.z = n->pos[2];
+                    Eigen::Quaternion<double> q;
+                    Eigen::Vector3d init(1.0, 0.0, 0.0);
+                    // Zero out rotation along
+                    // x and y axis so only
+                    // yaw is kept
+                    Eigen::Vector3d dir(n->pos[0] - n->parent->pos[0], n->pos[1] - n->parent->pos[1], 0);
+                    q.setFromTwoVectors(init, dir);
+
+                    p.pose.orientation.x = q.x();
+                    p.pose.orientation.y = q.y();
+                    p.pose.orientation.z = q.z();
+                    p.pose.orientation.w = q.w();
+
+                    path.poses.push_back(p);
+                }
+
                 goal_reached=true;
             }
+        }
     }
 
+    return path;
 }
     
 
@@ -152,7 +181,7 @@ bool RRT::collisionLine(std::shared_ptr<point_rtree> octomap_rtree, Eigen::Vecto
 // Return:  distance squared from cylinder axis if point is inside.
 //
 //-----------------------------------------------------------------------------
-float STLAEPlanner::CylTest_CapsFirst(const octomap::point3d& pt1, const octomap::point3d& pt2, float lsq, float rsq, const octomap::point3d& pt)
+float RRT::CylTest_CapsFirst(const octomap::point3d& pt1, const octomap::point3d& pt2, float lsq, float rsq, const octomap::point3d& pt)
 {
   float dx, dy, dz;     // vector d  from line segment point 1 to point 2
   float pdx, pdy, pdz;  // vector pd from point 1 to test point
