@@ -7,7 +7,46 @@ nav_msgs::Path RRT::findTrajectory(std::shared_ptr<octomap::OcTree> otree, std::
     if (!otree->search(octomap::point3d(state_to_reach[0], state_to_reach[1], state_to_reach[2])))
         return path;
 
+    //Check if it is possible to reach the point in a single segment
+    Eigen::Vector3d point_to_reach(state_to_reach[0], state_to_reach[1], state_to_reach[2]);
+    Eigen::Vector3d current_point(current_state[0], current_state[1], current_state[2]);
+    std::shared_ptr<RRT> goal = std::make_shared<RRT>();
+    goal->state = state_to_reach;
+    if((point_to_reach - current_point).norm() < extension_range){
+      if (!collisionLine(octomap_rtree, current_state, state_to_reach, collision_radius)){
+        std::shared_ptr<RRT> new_node = std::make_shared<RRT>();
+        new_node->state = state;
+        std::shared_ptr<RRT> nearest = chooseParent(*rrt_rtree,octomap_rtree,new_node);
+        goal->parent = nearest;
+        nearest->children.push_back(goal);
+        rrt_rtree->insert(std::make_pair(point3d(state_to_reach[0], state_to_reach[1], state_to_reach[2]),goal));
+        std::shared_ptr<RRT> n = goal;
+        for (int id = 0; n->parent; ++id)
+        {
+          geometry_msgs::PoseStamped p;
+          p.pose.position.x = n->state[0];
+          p.pose.position.y = n->state[1];
+          p.pose.position.z = n->state[2];
+          Eigen::Quaternion<double> q;
+          Eigen::Vector3d init(1.0, 0.0, 0.0);
+          // Zero out rotation along
+          // x and y axis so only
+          // yaw is kept
+          Eigen::Vector3d dir(n->state[0] - n->parent->state[0], n->state[1] - n->parent->state[1], 0);
+          q.setFromTwoVectors(init, dir);
 
+          p.pose.orientation.x = q.x();
+          p.pose.orientation.y = q.y();
+          p.pose.orientation.z = q.z();
+          p.pose.orientation.w = q.w();
+
+          path.poses.push_back(p);
+        }
+        return path;
+      }
+    }
+
+    //Build the RRT to reach the goal point
     bool goal_reached = false;
     while(!goal_reached){
 
@@ -28,13 +67,12 @@ nav_msgs::Path RRT::findTrajectory(std::shared_ptr<octomap::OcTree> otree, std::
         rrt_rtree->insert(std::make_pair(point3d(new_node->state[0], new_node->state[1], new_node->state[2]), new_node));
 
         Eigen::Vector3d point_new(new_node->state[0], new_node->state[1], new_node->state[2]);
-        Eigen::Vector3d point_to_reach(state_to_reach[0], state_to_reach[1], state_to_reach[2]);
+        
         if((point_to_reach - point_new).norm() < extension_range){
             if (!collisionLine(octomap_rtree, current_state, state_to_reach, collision_radius)){
-                std::shared_ptr<RRT> goal = std::make_shared<RRT>();
                 goal->parent = new_node;
                 new_node->children.push_back(goal);
-                goal->state = state_to_reach;
+                
                 rrt_rtree->insert(std::make_pair(point3d(state_to_reach[0], state_to_reach[1], state_to_reach[2]),goal));
                 std::shared_ptr<RRT> n = goal;
                 for (int id = 0; n->parent; ++id)
