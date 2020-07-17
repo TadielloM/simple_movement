@@ -1,4 +1,4 @@
-include "rrt.h"
+#include "rrt.hh"
 
 nav_msgs::Path RRT::findTrajectory(std::shared_ptr<octomap::OcTree> otree, std::shared_ptr<point_rtree> octomap_rtree, value_rtree* rrt_rtree,const Eigen::Vector4d& current_state,const Eigen::Vector4d& state_to_reach){
     
@@ -11,38 +11,44 @@ nav_msgs::Path RRT::findTrajectory(std::shared_ptr<octomap::OcTree> otree, std::
     bool goal_reached = false;
     while(!goal_reached){
 
-        std::shared_ptr<RRTNode> new_node = std::make_shared<RRTNode>();
-        std::shared_ptr<RRTNode> nearest;
+        std::shared_ptr<RRT> new_node = std::make_shared<RRT>();
+        std::shared_ptr<RRT> nearest;
+        octomap::OcTreeNode* ot_result;
         do{
                 Eigen::Vector4d offset = sampleNewPoint();
                 new_node->state = current_state + offset;
-                nearest = chooseParent(new_node);
+                nearest = chooseParent(*rrt_rtree,octomap_rtree,new_node);
                 new_node->state = restrictDistance(nearest->state, new_node->state);
                 ot_result = otree->search(octomap::point3d(new_node->state[0], new_node->state[1], new_node->state[2]));
                 if (ot_result == NULL)
                     continue;
-        }while(!isInsideBoundaries(new_node->state) or !ot_result or collisionLine(stl_rtree, nearest->state, new_node->state, collision_radius));)
-        new_node->parent_ = nearest;
-        nearest->children_.push_back(new_node);
-        rrt_rtree->insert(std::make_pair(point3d(new_node->state_[0], new_node->state_[1], new_node->state_[2]), new_node));
+        }while(!isInsideBoundaries(new_node->state) or !ot_result or collisionLine(octomap_rtree, nearest->state, new_node->state, collision_radius));
+        new_node->parent = nearest;
+        nearest->children.push_back(new_node);
+        rrt_rtree->insert(std::make_pair(point3d(new_node->state[0], new_node->state[1], new_node->state[2]), new_node));
 
-        Eigen::Vector3d point_current(current_state[0], current_state[1], current_state[2]);
+        Eigen::Vector3d point_new(new_node->state[0], new_node->state[1], new_node->state[2]);
         Eigen::Vector3d point_to_reach(state_to_reach[0], state_to_reach[1], state_to_reach[2]);
-        if((point_to_reach - point_current).norm() < extension_range){
-            if (!collisionLine(otree, point_current, point_to_reach, collision_radius)){
-                rrt_rtree->insert(std::make_pair(point3d(current_state[0], current_state[1], current_state[2]),std::make_shared<RRTNode>()))
+        if((point_to_reach - point_new).norm() < extension_range){
+            if (!collisionLine(octomap_rtree, current_state, state_to_reach, collision_radius)){
+                std::shared_ptr<RRT> goal = std::make_shared<RRT>();
+                goal->parent = new_node;
+                new_node->children.push_back(goal);
+                goal->state = state_to_reach;
+                rrt_rtree->insert(std::make_pair(point3d(state_to_reach[0], state_to_reach[1], state_to_reach[2]),goal));
+                std::shared_ptr<RRT> n = goal;
                 for (int id = 0; n->parent; ++id)
                 {
                     geometry_msgs::PoseStamped p;
-                    p.pose.position.x = n->pos[0];
-                    p.pose.position.y = n->pos[1];
-                    p.pose.position.z = n->pos[2];
+                    p.pose.position.x = n->state[0];
+                    p.pose.position.y = n->state[1];
+                    p.pose.position.z = n->state[2];
                     Eigen::Quaternion<double> q;
                     Eigen::Vector3d init(1.0, 0.0, 0.0);
                     // Zero out rotation along
                     // x and y axis so only
                     // yaw is kept
-                    Eigen::Vector3d dir(n->pos[0] - n->parent->pos[0], n->pos[1] - n->parent->pos[1], 0);
+                    Eigen::Vector3d dir(n->state[0] - n->parent->state[0], n->state[1] - n->parent->state[1], 0);
                     q.setFromTwoVectors(init, dir);
 
                     p.pose.orientation.x = q.x();
@@ -70,17 +76,17 @@ Eigen::Vector4d RRT::sampleNewPoint()
   {
     for (int i = 0; i < 3; i++)
       point[i] = max_sampling_radius * 2.0 * (((double)rand()) / ((double)RAND_MAX) - 0.5);
-  } while (point.squaredNorm() > max_sampling_radius_squared_);
+  } while (point.squaredNorm() > (max_sampling_radius*max_sampling_radius));
 
   return point;
 }
 
-std::shared_ptr<RRTNode> RRT::chooseParent(const value_rtree& rrt_rtree, std::shared_ptr<point_rtree> octomap_rtree,
-                                                    std::shared_ptr<RRTNode> node)
+std::shared_ptr<RRT> RRT::chooseParent(const value_rtree& rrt_rtree, std::shared_ptr<point_rtree> octomap_rtree,
+                                                    std::shared_ptr<RRT> node)
 {
   // Find nearest neighbour
   std::vector<value> nearest;
-  rrt_rtree.query(bgi::nearest(point(node->state[0], node->state[1], node->state[2]), 15),
+  rrt_rtree.query(bgi::nearest(point3d(node->state[0], node->state[1], node->state[2]), 15),
               std::back_inserter(nearest));
   
   //return the RRT_Node of the first element of the vector nearest 
@@ -124,7 +130,7 @@ bool RRT::isInsideBoundaries(Eigen::Vector4d point)
          point[2] > boundary_min[2] and point[2] < boundary_max[2];
 }
 
-bool RRT::collisionLine(std::shared_ptr<point_rtree> octomap_rtree, Eigen::Vector4d p1, Eigen::Vector4d p2,double r)
+bool RRT::collisionLine(std::shared_ptr<point_rtree> octomap_rtree, Eigen::Vector4d p1, Eigen::Vector4d p2,float r)
 {
   octomap::point3d start(p1[0], p1[1], p1[2]);
   octomap::point3d end(p2[0], p2[1], p2[2]);

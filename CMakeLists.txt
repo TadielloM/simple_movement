@@ -15,19 +15,17 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
   geometry_msgs
+  nav_msgs
   gazebo_msgs
   gazebo_ros
   tf2
 )
 
 ## System dependencies are found with CMake's conventions
-# find_package(Boost REQUIRED COMPONENTS system)
+find_package(Boost REQUIRED COMPONENTS system)
 find_package( gazebo REQUIRED)
-
-## Uncomment this if the package has a setup.py. This macro ensures
-## modules and global scripts declared therein get installed
-## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
-# catkin_python_setup()
+find_package(Eigen3 REQUIRED)
+find_package(octomap REQUIRED)
 
 ################################################
 ## Declare ROS messages, services and actions ##
@@ -136,13 +134,20 @@ src/fly_to.hh
 src/fly_to.cpp
 )
 
+add_library(RRT
+src/rrt.hh
+src/rrt.cpp
+)
+
+
 ## Declare a C++ library
 add_library( _simple_movement
    src/simple_movement.cpp
 )
 
 target_link_libraries(_simple_movement
-  FlyTo  
+  FlyTo
+  RRT
 )
 
 
