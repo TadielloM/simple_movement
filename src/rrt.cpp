@@ -19,6 +19,7 @@ nav_msgs::Path RRT::findTrajectory(std::shared_ptr<octomap::OcTree> otree, std::
     std::cout<<"ARRIVO PRIMA DI COSTRUIRE TUTTO 8\n";
 
     if((point_to_reach - current_point).norm() < extension_range){
+      std::cout<<"It's possibile to reach the point in one step\n";
       if (!collisionLine(octomap_rtree, current_state, state_to_reach, collision_radius)){
         std::shared_ptr<RRT> new_node = std::make_shared<RRT>();
         new_node->state = state;

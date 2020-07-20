@@ -35,16 +35,17 @@ point_rtree FlyTo::getRtree(std::shared_ptr<octomap::OcTree> ot, octomap::point3
   point_rtree octomap_rtree;
       std::cout<<"ARRIVO PRIMA DI COSTRUIRE TUTTO 6.2\n";
 
-  std::cout <<ot<<std::endl;
+  // std::cout <<*ot<<std::endl;
 
   for (octomap::OcTree::leaf_bbx_iterator it = ot->begin_leafs_bbx(min, max), it_end = ot->end_leafs_bbx();
        it != it_end; ++it)
   {
-        std::cout<<"ARRIVO PRIMA DI COSTRUIRE TUTTO 6.3\n";
+        
 
     if (it->getLogOdds() > 0)
     {
       octomap_rtree.insert(point3d(it.getX(), it.getY(), it.getZ()));
+      // std::cout<<"ARRIVO PRIMA DI COSTRUIRE TUTTO 6.3\n";
     }
   }
       std::cout<<"ARRIVO PRIMA DI COSTRUIRE TUTTO 6.4\n";
@@ -137,8 +138,9 @@ void FlyTo::execute(const simple_movement::FlyToGoalConstPtr &goal,
   octomap::point3d max(current_state[0] + max_sampling_radius + 0.5,
                        current_state[1] + max_sampling_radius + 0.5,
                        current_state[2] + max_sampling_radius + 0.5);
-    std::cout<<"ARRIVO PRIMA DI COSTRUIRE TUTTO 6\n";
-  
+  std::cout<<"ARRIVO PRIMA DI COSTRUIRE TUTTO 6\n";
+  std::cout<<min <<" " <<max<<std::endl;
+
   if(ot_ == NULL)
     as->setSucceeded();
 
