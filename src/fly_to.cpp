@@ -9,14 +9,21 @@ FlyTo::FlyTo()
     : pub_(nh_.advertise<geometry_msgs::PoseStamped>("fly_to_cmd", 1000)), as_(nh_, "fly_to", 
     boost::bind(&FlyTo::execute, this, _1, &as_), false),
     octomap_sub_(nh_.subscribe("octomap_full", 1, &FlyTo::octomapCallback,this)),
-    ot_(NULL)
+    ot_(NULL)    
 {
   ROS_INFO("Starting fly to server");
   as_.start();
 }
 
-void FlyTo::setModel(gazebo::physics::ModelPtr model_){
+void FlyTo::setModel(gazebo::physics::ModelPtr model_)
+{
   this->model=model_;
+}
+
+void FlyTo::setVelocitiesPointer(ignition::math::Vector3d* linear_vel, ignition::math::Vector3d* angular_vel)
+{
+  this->linear_vel =linear_vel;
+  this->angular_vel =angular_vel;
 }
 
 void FlyTo::octomapCallback(const octomap_msgs::Octomap& msg)
@@ -121,24 +128,26 @@ void FlyTo::execute(const simple_movement::FlyToGoalConstPtr &goal,
       ignition::math::Vector3d velocity;
       if(actual_position.Pos().Distance(actual_goal.Pos()) > 0.6){
         velocity = (actual_goal.Pos() - actual_position.Pos()).Normalize() * 5;
-        this->model->SetLinearVel(velocity);
+        *linear_vel = velocity;
       }
       else if(actual_position.Pos().Distance(actual_goal.Pos()) > 0.2){
         velocity = (actual_goal.Pos() - actual_position.Pos()).Normalize();
-        this->model->SetLinearVel(velocity);
+        *linear_vel = velocity;
       }
+      // std:cout<<"The velocity is: "<< *linear_vel<<std::endl;
 
       // ROS_INFO_STREAM("Distance to goal: " << actual_position.Pos().Distance(actual_goal.Pos()));
       roll_diff = goal_roll - eulers[0];
       pitch_diff = goal_pitch - eulers[1];
       yaw_diff = goal_yaw - eulers[2];
-      ignition::math::Vector3d angular_vel((roll_diff>=goal->yaw_converged?1:0)*2,(pitch_diff>=goal->yaw_converged?1:0)*2,(yaw_diff>=goal->yaw_converged?1:0)*2);
-      // if(yaw_diff>0)
-        this->model->SetAngularVel(angular_vel);
+      ignition::math::Vector3d angular_velocity((roll_diff>=goal->yaw_converged?1:0)*2,(pitch_diff>=goal->yaw_converged?1:0)*2,(yaw_diff>=goal->yaw_converged?1:0)*2);
+      *angular_vel = angular_velocity;
 
-    } while (actual_position.Pos().Distance(actual_goal.Pos()) > goal->distance_converged && (yaw_diff > goal->yaw_converged) && (roll_diff > goal->yaw_converged) && (pitch_diff > goal->yaw_converged));
+    } while (actual_position.Pos().Distance(actual_goal.Pos()) > goal->distance_converged);
   }
-  
+
+  *linear_vel =ignition::math::Vector3d(0,0,0);
+  *angular_vel = ignition::math::Vector3d(0,0,0);
   as->setSucceeded();
 }
 

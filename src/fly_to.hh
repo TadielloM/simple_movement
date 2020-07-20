@@ -22,16 +22,19 @@ class FlyTo
   actionlib::SimpleActionServer<simple_movement::FlyToAction> as_;
   gazebo::physics::ModelPtr model;
   std::shared_ptr<octomap::OcTree> ot_;
+  ignition::math::Vector3d* linear_vel;
+  ignition::math::Vector3d* angular_vel;
 
 
-    public:
+  public:
   FlyTo();
   void execute(const simple_movement::FlyToGoalConstPtr& goal,
                actionlib::SimpleActionServer<simple_movement::FlyToAction>* as);
   void setModel(gazebo::physics::ModelPtr model_);
   void octomapCallback(const octomap_msgs::Octomap& msg);
   point_rtree getRtree(std::shared_ptr<octomap::OcTree> ot, octomap::point3d min, octomap::point3d max);
+  void setVelocitiesPointer(ignition::math::Vector3d* linear_vel, ignition::math::Vector3d* angular_vel);
 
-};
+};  
 
 #endif

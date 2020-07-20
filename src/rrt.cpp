@@ -25,8 +25,8 @@ nav_msgs::Path RRT::findTrajectory(std::shared_ptr<octomap::OcTree> otree, std::
 
     Eigen::Vector3d point_to_reach(state_to_reach[0], state_to_reach[1], state_to_reach[2]);
     Eigen::Vector3d current_point(current_state[0], current_state[1], current_state[2]);
-    // std::cout<<"Point to reach: "<<point_to_reach<<std::endl;
-    // std::cout<<"Current point: "<<current_state<<std::endl;
+    std::cout<<"Point to reach: "<<point_to_reach<<std::endl;
+    std::cout<<"Current point: "<<current_state<<std::endl;
 
     //Check if Octree is empty, don't move
     if(otree == NULL){

@@ -17,14 +17,16 @@ namespace gazebo
         ignition::math::Pose3<double> pose;
         std::string name;
         uint32_t counter_msg = 0;
+        uint8_t status=3;
+        ignition::math::Vector3d linear_vel;
+        ignition::math::Vector3d angular_vel;
 
     public:
         transport::NodePtr gazebo_node_;
         ros::NodeHandle *nh_;
         FlyTo fly_to;
         ros::Publisher pub;
-
-    public:
+    
         //Constructor
         BasicMovement()
         {
@@ -41,6 +43,8 @@ namespace gazebo
             // Create node handle
             nh_ = new ros::NodeHandle("/");
             this->pub = nh_->advertise<geometry_msgs::PoseStamped>("/position_drone", 1);
+            linear_vel = ignition::math::Vector3d(0,0,0);
+            angular_vel =ignition::math::Vector3d(0,0,0);
         }
 
         //Destructor
@@ -72,8 +76,9 @@ namespace gazebo
             //Setup of this drone Agent
             name = this->model->GetName();
             fly_to.setModel(this->model);
+            fly_to.setVelocitiesPointer(&linear_vel,&angular_vel);
             std::cout << "Model from plugin part :";
-
+            ros::Rate(20);
             std::cout << this->model << std::endl;
             // Listen to the update event. This event is broadcast every
             // simulation iteration.
@@ -87,9 +92,14 @@ namespace gazebo
         // Called by the world update start event
         void OnUpdate()
         {
+            
             ignition::math::Pose3<double> actual_position = this->model->WorldPose();
+            
+            this->model->SetLinearVel(linear_vel);
+            this->model->SetAngularVel(angular_vel);
             pubFunc(actual_position);
             ros::spinOnce();
+            
         }
 
         // Pointer to the model
