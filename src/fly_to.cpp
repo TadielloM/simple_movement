@@ -38,11 +38,8 @@ point_rtree FlyTo::getRtree(std::shared_ptr<octomap::OcTree> ot, octomap::point3
     if (it->getLogOdds() > 0)
     {
       octomap_rtree.insert(point3d(it.getX(), it.getY(), it.getZ()));
-      // std::cout<<"ARRIVO PRIMA DI COSTRUIRE TUTTO 6.3\n";
     }
   }
-      std::cout<<"ARRIVO PRIMA DI COSTRUIRE TUTTO 6.4\n";
-
   return octomap_rtree;
 }
 
@@ -50,8 +47,7 @@ point_rtree FlyTo::getRtree(std::shared_ptr<octomap::OcTree> ot, octomap::point3
 void FlyTo::execute(const simple_movement::FlyToGoalConstPtr &goal,
                     actionlib::SimpleActionServer<simple_movement::FlyToAction> *as)
 {
-  ROS_INFO_STREAM("Got new goal: Fly to (" << goal->pose.pose.position.x << ", " << goal->pose.pose.position.y << ", "
-                                           << goal->pose.pose.position.z << ") ");
+  // ROS_INFO_STREAM("Got new goal: Fly to (" << goal->pose.pose.position.x << ", " << goal->pose.pose.position.y << ", " << goal->pose.pose.position.z << ") ");
 
   ros::Rate r(20);
   ignition::math::Pose3<double> actual_goal;
@@ -70,7 +66,7 @@ void FlyTo::execute(const simple_movement::FlyToGoalConstPtr &goal,
 
   double goal_roll, goal_pitch, goal_yaw;
   tf2::Matrix3x3(quat).getRPY(goal_roll, goal_pitch, goal_yaw);
-  std::cout<<"Goal orientation: "<<goal_roll<<" "<<goal_pitch<<" "<<goal_yaw<<" "<<"\n";
+  // std::cout<<"Goal orientation: "<<goal_roll<<" "<<goal_pitch<<" "<<goal_yaw<<" "<<"\n";
   ignition::math::Pose3<double> actual_position = this->model->WorldPose();
   float distance_to_goal = 9001; // Distance is over 9000
   float roll_diff = M_PI;
@@ -87,12 +83,15 @@ void FlyTo::execute(const simple_movement::FlyToGoalConstPtr &goal,
   state_to_reach[1] = actual_goal.Pos().Y();
   state_to_reach[2] = actual_goal.Pos().Z();
   state_to_reach[3] = 0;
+  
+  // ROS_INFO_STREAM("The current state is: "<<current_state);
+  // ROS_INFO_STREAM("The state to reach is "<<state_to_reach);
+
 
   std::shared_ptr<RRT> root_(std::make_shared<RRT>(current_state));
   value_rtree rrt_rtree;
   rrt_rtree.insert(std::make_pair(point3d(current_state[0], current_state[1], current_state[2]), root_));;
 
-  std::cout<<"ARRIVO PRIMA DI COSTRUIRE TUTTO\n";
 
   octomap::point3d min(current_state[0] - max_sampling_radius - 0.5,
                        current_state[1] - max_sampling_radius - 0.5,
@@ -103,12 +102,9 @@ void FlyTo::execute(const simple_movement::FlyToGoalConstPtr &goal,
                        current_state[2] + max_sampling_radius + 0.5);
 
   std::shared_ptr<point_rtree> octomap_rtree = std::make_shared<point_rtree>(getRtree(ot_, min, max));
-  std::cout<<"ARRIVO PRIMA DI FindTrajectory\n";
-
   nav_msgs::Path path_to_goal = root_->findTrajectory(ot_,octomap_rtree,&rrt_rtree,current_state,state_to_reach);
 
   // Check if target is reached...
-  std::cout<<"ARRIVO PRIMA DEL FOR FOR PATH\n";
   for(int i=0; i<path_to_goal.poses.size();i++){
     actual_goal.Pos().X() = path_to_goal.poses[i].pose.position.x;
     actual_goal.Pos().Y() = path_to_goal.poses[i].pose.position.y;

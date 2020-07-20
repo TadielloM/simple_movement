@@ -1,8 +1,8 @@
 #include "rrt.hh"
 
 nav_msgs::Path RRT::findTrajectory(std::shared_ptr<octomap::OcTree> otree, std::shared_ptr<point_rtree> octomap_rtree, value_rtree* rrt_rtree,const Eigen::Vector4d& current_state,const Eigen::Vector4d& state_to_reach){
-    std::cout<<"ARRIVO PRIMA DI COSTRUIRE TUTTO 6\n";
 
+    //Defining the path message and set the first element to actual position
     nav_msgs::Path path;
     geometry_msgs::PoseStamped start;
         start.pose.position.x = current_state[0];
@@ -25,16 +25,17 @@ nav_msgs::Path RRT::findTrajectory(std::shared_ptr<octomap::OcTree> otree, std::
 
     Eigen::Vector3d point_to_reach(state_to_reach[0], state_to_reach[1], state_to_reach[2]);
     Eigen::Vector3d current_point(current_state[0], current_state[1], current_state[2]);
-    std::cout<<"Point to reach: "<<point_to_reach<<std::endl;
-    std::cout<<"Current point: "<<point_to_reach<<std::endl;
+    // std::cout<<"Point to reach: "<<point_to_reach<<std::endl;
+    // std::cout<<"Current point: "<<current_state<<std::endl;
 
+    //Check if Octree is empty, don't move
     if(otree == NULL){
       std::cout<<"Octree empty\n";
       return path;
     }
       
     
-    //IF point is unreacheable return 
+    //If point is unreacheable return, don't move
     if (!otree->search(octomap::point3d(state_to_reach[0], state_to_reach[1], state_to_reach[2]))){
         std::cout<<"Point unreacheable\n";
         return path;
@@ -44,29 +45,18 @@ nav_msgs::Path RRT::findTrajectory(std::shared_ptr<octomap::OcTree> otree, std::
     //Check if it is possible to reach the point in a single segment
     std::shared_ptr<RRT> goal = std::make_shared<RRT>();
     goal->state = state_to_reach;
-    std::cout <<"The distance between the two point is "<<(point_to_reach - current_point).norm()<<" meters\n";
+    // std::cout <<"The distance between the two point is "<<(point_to_reach - current_point).norm()<<" meters\n";
     // if((point_to_reach - current_point).norm() < extension_range){
-      std::cout<<"It's possibile to reach the point in one step\n";
+      // std::cout<<"It's possibile to reach the point in one step\n";
       if (!collisionLine(octomap_rtree, current_state, state_to_reach, collision_radius)){
-        std::cout<<"a\n";
         std::shared_ptr<RRT> new_node = std::make_shared<RRT>();
         new_node->state = state;
-                std::cout<<"b\n";
-
         std::shared_ptr<RRT> nearest = chooseParent(*rrt_rtree,octomap_rtree,new_node);
-                std::cout<<"c\n";
-
         goal->parent = nearest;
         nearest->children.push_back(goal);
-                std::cout<<"d\n";
 
         rrt_rtree->insert(std::make_pair(point3d(state_to_reach[0], state_to_reach[1], state_to_reach[2]),goal));
-                std::cout<<"e\n";
-
         std::shared_ptr<RRT> n = goal;
-                std::cout<<"f\n";
-
-        std::cout<<"g\n";
 
         geometry_msgs::PoseStamped p;
         p.pose.position.x = goal->state[0];
@@ -77,7 +67,6 @@ nav_msgs::Path RRT::findTrajectory(std::shared_ptr<octomap::OcTree> otree, std::
         // Zero out rotation along
         // x and y axis so only
         // yaw is kept
-                std::cout<<"h\n";
 
         Eigen::Vector3d dir(goal->state[0] - goal->parent->state[0], goal->state[1] - goal->parent->state[1], 0);
         q.setFromTwoVectors(init, dir);
@@ -89,12 +78,10 @@ nav_msgs::Path RRT::findTrajectory(std::shared_ptr<octomap::OcTree> otree, std::
 
         path.poses.push_back(p);
 
-              std::cout<<"i\n";
-              std::cout<<"Path: "<<path<<std::endl;
+        // std::cout<<"Path: "<<path<<std::endl;
         return path;
       }
     // }
-        std::cout<<"ARRIVO PRIMA DI COSTRUIRE TUTTO 9\n";
 
     //Build the RRT to reach the goal point
     // bool goal_reached = false;
@@ -169,7 +156,6 @@ nav_msgs::Path RRT::findTrajectory(std::shared_ptr<octomap::OcTree> otree, std::
     //         }
     //     }
     // }
-    std::cout<<"ARRIVO PRIMA DI COSTRUIRE TUTTO 10\n";
 
     return path;
 }
