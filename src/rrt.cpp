@@ -4,6 +4,25 @@ nav_msgs::Path RRT::findTrajectory(std::shared_ptr<octomap::OcTree> otree, std::
     std::cout<<"ARRIVO PRIMA DI COSTRUIRE TUTTO 6\n";
 
     nav_msgs::Path path;
+    geometry_msgs::PoseStamped start;
+        start.pose.position.x = current_state[0];
+        start.pose.position.y = current_state[1];
+        start.pose.position.z = current_state[2];
+        Eigen::Quaternion<double> q;
+        Eigen::Vector3d init(1.0, 0.0, 0.0);
+        // Zero out rotation along
+        // x and y axis so only
+        // yaw is kept
+        Eigen::Vector3d dir(0,0,0);
+        q.setFromTwoVectors(init, dir);
+
+        start.pose.orientation.x = q.x();
+        start.pose.orientation.y = q.y();
+        start.pose.orientation.z = q.z();
+        start.pose.orientation.w = q.w();
+
+    path.poses.push_back(start);
+
     //IF point is unreacheble return 
     std::cout<<"ARRIVO PRIMA DI COSTRUIRE TUTTO 6.5\n";
 
@@ -16,99 +35,136 @@ nav_msgs::Path RRT::findTrajectory(std::shared_ptr<octomap::OcTree> otree, std::
     Eigen::Vector3d current_point(current_state[0], current_state[1], current_state[2]);
     std::shared_ptr<RRT> goal = std::make_shared<RRT>();
     goal->state = state_to_reach;
+    std::cout<< <<"Point to reach: "<<point_to_reach<<std::endl;
+    std::cout<< <<"Current point: "<<point_to_reach<<std::endl;
+
     std::cout<<"ARRIVO PRIMA DI COSTRUIRE TUTTO 8\n";
 
-    if((point_to_reach - current_point).norm() < extension_range){
+    std::cout <<"The distance between the two point is "<<(point_to_reach - current_point).norm()<<" meters\n";
+    // if((point_to_reach - current_point).norm() < extension_range){
       std::cout<<"It's possibile to reach the point in one step\n";
       if (!collisionLine(octomap_rtree, current_state, state_to_reach, collision_radius)){
+        std::cout<<"a\n";
         std::shared_ptr<RRT> new_node = std::make_shared<RRT>();
         new_node->state = state;
+                std::cout<<"b\n";
+
         std::shared_ptr<RRT> nearest = chooseParent(*rrt_rtree,octomap_rtree,new_node);
+                std::cout<<"c\n";
+
         goal->parent = nearest;
         nearest->children.push_back(goal);
+                std::cout<<"d\n";
+
         rrt_rtree->insert(std::make_pair(point3d(state_to_reach[0], state_to_reach[1], state_to_reach[2]),goal));
+                std::cout<<"e\n";
+
         std::shared_ptr<RRT> n = goal;
-        for (int id = 0; n->parent; ++id)
-        {
-          geometry_msgs::PoseStamped p;
-          p.pose.position.x = n->state[0];
-          p.pose.position.y = n->state[1];
-          p.pose.position.z = n->state[2];
-          Eigen::Quaternion<double> q;
-          Eigen::Vector3d init(1.0, 0.0, 0.0);
-          // Zero out rotation along
-          // x and y axis so only
-          // yaw is kept
-          Eigen::Vector3d dir(n->state[0] - n->parent->state[0], n->state[1] - n->parent->state[1], 0);
-          q.setFromTwoVectors(init, dir);
+                std::cout<<"f\n";
 
-          p.pose.orientation.x = q.x();
-          p.pose.orientation.y = q.y();
-          p.pose.orientation.z = q.z();
-          p.pose.orientation.w = q.w();
+        std::cout<<"g\n";
 
-          path.poses.push_back(p);
-        }
+        geometry_msgs::PoseStamped p;
+        p.pose.position.x = goal->state[0];
+        p.pose.position.y = goal->state[1];
+        p.pose.position.z = goal->state[2];
+        Eigen::Quaternion<double> q;
+        Eigen::Vector3d init(1.0, 0.0, 0.0);
+        // Zero out rotation along
+        // x and y axis so only
+        // yaw is kept
+                std::cout<<"h\n";
+
+        Eigen::Vector3d dir(goal->state[0] - goal->parent->state[0], goal->state[1] - goal->parent->state[1], 0);
+        q.setFromTwoVectors(init, dir);
+
+        p.pose.orientation.x = q.x();
+        p.pose.orientation.y = q.y();
+        p.pose.orientation.z = q.z();
+        p.pose.orientation.w = q.w();
+
+        path.poses.push_back(p);
+
+              std::cout<<"i\n";
+              std::cout<<"Path: "<<path<<std::endl;
         return path;
       }
-    }
+    // }
         std::cout<<"ARRIVO PRIMA DI COSTRUIRE TUTTO 9\n";
 
     //Build the RRT to reach the goal point
-    bool goal_reached = false;
-    while(!goal_reached){
+    // bool goal_reached = false;
+    // while(!goal_reached){
+    //     std::cout<<"State to reah: "<<state_to_reach<<"\nCurrent state: "<<current_state<<std::endl;
+    //     std::cout<<"Need more then one step to reach the goal\n";
+    //     std::shared_ptr<RRT> new_node = std::make_shared<RRT>();
+    //     std::shared_ptr<RRT> nearest;
+    //     octomap::OcTreeNode* ot_result;
+    //     std::cout<<"a\n";
+    //     do{
+    //             std::cout<<"1\n";
 
-        std::shared_ptr<RRT> new_node = std::make_shared<RRT>();
-        std::shared_ptr<RRT> nearest;
-        octomap::OcTreeNode* ot_result;
-        do{
-                Eigen::Vector4d offset = sampleNewPoint();
-                new_node->state = current_state + offset;
-                nearest = chooseParent(*rrt_rtree,octomap_rtree,new_node);
-                new_node->state = restrictDistance(nearest->state, new_node->state);
-                ot_result = otree->search(octomap::point3d(new_node->state[0], new_node->state[1], new_node->state[2]));
-                if (ot_result == NULL)
-                    continue;
-        }while(!isInsideBoundaries(new_node->state) or !ot_result or collisionLine(octomap_rtree, nearest->state, new_node->state, collision_radius));
-        new_node->parent = nearest;
-        nearest->children.push_back(new_node);
-        rrt_rtree->insert(std::make_pair(point3d(new_node->state[0], new_node->state[1], new_node->state[2]), new_node));
+    //             Eigen::Vector4d offset = sampleNewPoint();
+    //                             std::cout<<"2\n";
 
-        Eigen::Vector3d point_new(new_node->state[0], new_node->state[1], new_node->state[2]);
+    //             new_node->state = current_state + offset;
+    //             nearest = chooseParent(*rrt_rtree,octomap_rtree,new_node);
+    //                             std::cout<<"3\n";
+
+    //             new_node->state = restrictDistance(nearest->state, new_node->state);
+    //                             std::cout<<"4\n";
+
+    //             ot_result = otree->search(octomap::point3d(new_node->state[0], new_node->state[1], new_node->state[2]));
+    //                             std::cout<<"5\n";
+
+    //             if (ot_result == NULL){
+    //                 std::cout<<"6\n";
+
+    //                 continue;
+    //             }            
+    //                             std::cout<<"7\n";
+
+    //     }while(!isInsideBoundaries(new_node->state) or !ot_result or collisionLine(octomap_rtree, nearest->state, new_node->state, collision_radius));
+    //     new_node->parent = nearest;
+    //     nearest->children.push_back(new_node);
+    //     rrt_rtree->insert(std::make_pair(point3d(new_node->state[0], new_node->state[1], new_node->state[2]), new_node));
+
+    //     Eigen::Vector3d point_new(new_node->state[0], new_node->state[1], new_node->state[2]);
         
-        if((point_to_reach - point_new).norm() < extension_range){
-            if (!collisionLine(octomap_rtree, current_state, state_to_reach, collision_radius)){
-                goal->parent = new_node;
-                new_node->children.push_back(goal);
+    //     std::cout <<"The distance between the two point is "<<(point_to_reach - point_new).norm()<<" meters\n";
+    //     if((point_to_reach - point_new).norm() < extension_range){
+    //         if (!collisionLine(octomap_rtree, current_state, state_to_reach, collision_radius)){
+    //             goal->parent = new_node;
+    //             new_node->children.push_back(goal);
                 
-                rrt_rtree->insert(std::make_pair(point3d(state_to_reach[0], state_to_reach[1], state_to_reach[2]),goal));
-                std::shared_ptr<RRT> n = goal;
-                for (int id = 0; n->parent; ++id)
-                {
-                    geometry_msgs::PoseStamped p;
-                    p.pose.position.x = n->state[0];
-                    p.pose.position.y = n->state[1];
-                    p.pose.position.z = n->state[2];
-                    Eigen::Quaternion<double> q;
-                    Eigen::Vector3d init(1.0, 0.0, 0.0);
-                    // Zero out rotation along
-                    // x and y axis so only
-                    // yaw is kept
-                    Eigen::Vector3d dir(n->state[0] - n->parent->state[0], n->state[1] - n->parent->state[1], 0);
-                    q.setFromTwoVectors(init, dir);
+    //             rrt_rtree->insert(std::make_pair(point3d(state_to_reach[0], state_to_reach[1], state_to_reach[2]),goal));
+    //             std::shared_ptr<RRT> n = goal;
+    //             for (int id = 0; n->parent; ++id)
+    //             {
+    //                 geometry_msgs::PoseStamped p;
+    //                 p.pose.position.x = n->state[0];
+    //                 p.pose.position.y = n->state[1];
+    //                 p.pose.position.z = n->state[2];
+    //                 Eigen::Quaternion<double> q;
+    //                 Eigen::Vector3d init(1.0, 0.0, 0.0);
+    //                 // Zero out rotation along
+    //                 // x and y axis so only
+    //                 // yaw is kept
+    //                 Eigen::Vector3d dir(n->state[0] - n->parent->state[0], n->state[1] - n->parent->state[1], 0);
+    //                 q.setFromTwoVectors(init, dir);
 
-                    p.pose.orientation.x = q.x();
-                    p.pose.orientation.y = q.y();
-                    p.pose.orientation.z = q.z();
-                    p.pose.orientation.w = q.w();
+    //                 p.pose.orientation.x = q.x();
+    //                 p.pose.orientation.y = q.y();
+    //                 p.pose.orientation.z = q.z();
+    //                 p.pose.orientation.w = q.w();
 
-                    path.poses.push_back(p);
-                }
+    //                 path.poses.push_back(p);
+    //             }
 
-                goal_reached=true;
-            }
-        }
-    }
+    //             goal_reached=true;
+    //         }
+    //     }
+    // }
     std::cout<<"ARRIVO PRIMA DI COSTRUIRE TUTTO 10\n";
 
     return path;

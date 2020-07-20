@@ -24,7 +24,7 @@ typedef bgi::rtree<point3d, bgi::rstar<16>> point_rtree; //Used to store octomap
 const std::vector<float> boundary_min{std::vector<float>(3,-100)};
 const std::vector<float> boundary_max{std::vector<float>(3,100)};
 const float max_sampling_radius = 2; //maximum sampling radius for new point in the RRT
-const float extension_range = 2.5;   //Maximum extension of a branch of the rrt
+const float extension_range = 5;   //Maximum extension of a branch of the rrt
 const float collision_radius = 0.5; //The radius in which search collision should be a little be higher than the dimension of the robot
     
 class RRT : public std::enable_shared_from_this<RRT>

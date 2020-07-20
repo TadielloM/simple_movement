@@ -139,10 +139,9 @@ void FlyTo::execute(const simple_movement::FlyToGoalConstPtr &goal,
                        current_state[1] + max_sampling_radius + 0.5,
                        current_state[2] + max_sampling_radius + 0.5);
   std::cout<<"ARRIVO PRIMA DI COSTRUIRE TUTTO 6\n";
-  std::cout<<min <<" " <<max<<std::endl;
 
-  if(ot_ == NULL)
-    as->setSucceeded();
+  // if(ot_ == NULL)
+  //   as->setSucceeded();
 
 
   std::shared_ptr<point_rtree> octomap_rtree = std::make_shared<point_rtree>(getRtree(ot_, min, max));
