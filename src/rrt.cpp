@@ -37,7 +37,7 @@ nav_msgs::Path RRT::findTrajectory(std::shared_ptr<octomap::OcTree> otree, std::
     
     //If point is unreacheable return, don't move
     if (!otree->search(octomap::point3d(state_to_reach[0], state_to_reach[1], state_to_reach[2]))){
-        std::cout<<"Point unreacheable\n";
+        // std::cout<<"Point unreacheable\n";
         return path;
     }
         
