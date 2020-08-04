@@ -11,7 +11,7 @@ FlyTo::FlyTo()
     octomap_sub_(nh_.subscribe("octomap_full", 1, &FlyTo::octomapCallback,this)),
     ot_(NULL)    
 {
-  ROS_INFO("Starting fly to server");
+  // ROS_INFO("Starting fly to server");
   as_.start();
 }
 
