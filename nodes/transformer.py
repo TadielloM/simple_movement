@@ -25,7 +25,7 @@ def main():
   t = transformer()
 
   br = tf.TransformBroadcaster()
-  rate = rospy.Rate(10.0)
+  rate = rospy.Rate(20.0)
 
   while not rospy.is_shutdown():
     #t = rospy.Time.now().to_sec() * math.pi
