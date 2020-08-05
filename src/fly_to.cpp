@@ -5,11 +5,12 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <exception>
 
-FlyTo::FlyTo()
-    : pub_(nh_.advertise<geometry_msgs::PoseStamped>("fly_to_cmd", 1000)), as_(nh_, "fly_to", 
+FlyTo::FlyTo(std::shared_ptr<ros::NodeHandle> nh) :
+    nh_(nh),
+    pub_(nh_->advertise<geometry_msgs::PoseStamped>("fly_to_cmd", 1000)), as_(*nh_, "fly_to", 
     boost::bind(&FlyTo::execute, this, _1, &as_), false),
-    octomap_sub_(nh_.subscribe("octomap_full", 1, &FlyTo::octomapCallback,this)),
-    ot_(NULL)    
+    octomap_sub_(nh_->subscribe("octomap_full", 1, &FlyTo::octomapCallback,this)),
+    ot_(NULL)
 {
   // ROS_INFO("Starting fly to server");
   as_.start();
@@ -62,9 +63,6 @@ void FlyTo::execute(const simple_movement::FlyToGoalConstPtr &goal,
   actual_goal.Pos().Y() = goal->pose.pose.position.y;
   actual_goal.Pos().Z() = goal->pose.pose.position.z;
 
-
-  
-
   tf2::Quaternion quat;
 
   quat.setRPY( 1, 1, 1 );
@@ -110,7 +108,7 @@ void FlyTo::execute(const simple_movement::FlyToGoalConstPtr &goal,
 
   std::shared_ptr<point_rtree> octomap_rtree = std::make_shared<point_rtree>(getRtree(ot_, min, max));
   nav_msgs::Path path_to_goal = root_->findTrajectory(ot_,octomap_rtree,&rrt_rtree,current_state,state_to_reach);
-
+  // std::cout << "drone " <<nh_.get()<<std::endl;
   // Check if target is reached...
   for(int i=0; i<path_to_goal.poses.size();i++){
     actual_goal.Pos().X() = path_to_goal.poses[i].pose.position.x;

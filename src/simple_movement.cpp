@@ -12,6 +12,9 @@ namespace gazebo
 {
     class BasicMovement : public ModelPlugin
     {
+
+    private: std::shared_ptr<ros::NodeHandle> nh_;
+
         //public: std::unique_ptr<ros::NodeHandle> n;
         ignition::math::Pose3<double> actual_goal;
         ignition::math::Pose3<double> pose;
@@ -23,28 +26,19 @@ namespace gazebo
 
     public:
         transport::NodePtr gazebo_node_;
-        ros::NodeHandle *nh_;
-        FlyTo fly_to;
+       
+        FlyTo *fly_to;
         ros::Publisher pub;
     
         //Constructor
         BasicMovement()
         {
-            gazebo_node_ = gazebo::transport::NodePtr(new gazebo::transport::Node());
-            gazebo_node_->Init();
+            // gazebo_node_ = gazebo::transport::NodePtr(new gazebo::transport::Node());
+            // gazebo_node_->Init();
 
             // Make sure the ROS node for Gazebo has already been initialized
-            if (!ros::isInitialized())
-            {
-                ROS_FATAL_STREAM("A ROS node for Gazebo has not been initialized, unable to load plugin. "
-                                 << "Load the Gazebo system plugin 'libgazebo_ros_api_plugin.so' in the gazebo_ros package)");
-                return;
-            }
-            // Create node handle
-            nh_ = new ros::NodeHandle("/");
-            this->pub = nh_->advertise<geometry_msgs::PoseStamped>("/position_drone", 1);
-            linear_vel = ignition::math::Vector3d(0,0,0);
-            angular_vel =ignition::math::Vector3d(0,0,0);
+            
+            
         }
 
         //Destructor
@@ -75,10 +69,7 @@ namespace gazebo
             this->model = _parent;
             //Setup of this drone Agent
             name = this->model->GetName();
-            fly_to.setModel(this->model);
-            fly_to.setVelocitiesPointer(&linear_vel,&angular_vel);
-            std::cout << "Model from plugin part :";
-            ros::Rate(20);
+            
             std::cout << this->model << std::endl;
             // Listen to the update event. This event is broadcast every
             // simulation iteration.
@@ -86,13 +77,43 @@ namespace gazebo
                 std::bind(&BasicMovement::OnUpdate, this));
 
             std::cout << "Basic Moviment started!\n";
-            //this->n.reset(new ros::NodeHandle("simple_movement_node"));
+            // this->n.reset(new ros::NodeHandle("simple_movement_node"));
+            // Create node handle
+            // nh_ = new ros::NodeHandle();
+            if (!ros::isInitialized())
+            {
+                ROS_FATAL_STREAM("A ROS node for Gazebo has not been initialized, unable to load plugin. "
+                                 << "Load the Gazebo system plugin 'libgazebo_ros_api_plugin.so' in the gazebo_ros package)");
+                return;
+                // int argc = 0;
+                // char **argv = NULL;
+                // ros::init(argc, argv, "fly_to_node");
+            }
+            
+            // ros::init();
+            
+            this->nh_.reset(new ros::NodeHandle("~"));
+            fly_to = new FlyTo(nh_);
+            this->pub = nh_->advertise<geometry_msgs::PoseStamped>("/position_drone", 1);
+            linear_vel = ignition::math::Vector3d(0,0,0);
+            angular_vel =ignition::math::Vector3d(0,0,0);
+            fly_to->setModel(this->model);
+            fly_to->setVelocitiesPointer(&linear_vel,&angular_vel);
+            ros::Rate(20);
+            std::cout<< "URI: " <<ros::master::getURI() << std::endl;
+            std::cout<< " The Namespace is: " << nh_->getNamespace() <<std::endl;
+            std::vector< std::string > nodes;
+            ros::master::getNodes(nodes);
+
+            std::cout<< "The active nodes are: "<< std::endl;
+            for (auto i : nodes){
+                std::cout<< i <<std::endl;
+            }
         }
 
         // Called by the world update start event
         void OnUpdate()
         {
-            
             ignition::math::Pose3<double> actual_position = this->model->WorldPose();
             
             this->model->SetLinearVel(linear_vel);
@@ -101,6 +122,7 @@ namespace gazebo
             ros::spinOnce();
             
         }
+
 
         // Pointer to the model
     private:

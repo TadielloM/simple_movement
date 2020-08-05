@@ -16,7 +16,7 @@
 class FlyTo
 {
   private:
-  ros::NodeHandle nh_;
+  std::shared_ptr<ros::NodeHandle> nh_;
   ros::Publisher pub_;
   ros::Subscriber octomap_sub_;
   actionlib::SimpleActionServer<simple_movement::FlyToAction> as_;
@@ -27,7 +27,7 @@ class FlyTo
 
 
   public:
-  FlyTo();
+  FlyTo(std::shared_ptr<ros::NodeHandle> nh);
   void execute(const simple_movement::FlyToGoalConstPtr& goal,
                actionlib::SimpleActionServer<simple_movement::FlyToAction>* as);
   void setModel(gazebo::physics::ModelPtr model_);
