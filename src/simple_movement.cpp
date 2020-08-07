@@ -99,7 +99,7 @@ namespace gazebo
             angular_vel =ignition::math::Vector3d(0,0,0);
             fly_to->setModel(this->model);
             fly_to->setVelocitiesPointer(&linear_vel,&angular_vel);
-            ros::Rate(20);
+            // ros::Rate(20);
             std::cout<< "URI: " <<ros::master::getURI() << std::endl;
             std::cout<< " The Namespace is: " << nh_->getNamespace() <<std::endl;
             std::vector< std::string > nodes;
@@ -119,7 +119,7 @@ namespace gazebo
             this->model->SetLinearVel(linear_vel);
             this->model->SetAngularVel(angular_vel);
             pubFunc(actual_position);
-            ros::spinOnce();
+            // ros::spinOnce();
             
         }
 

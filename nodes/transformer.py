@@ -25,7 +25,7 @@ def main():
   t = transformer()
 
   br = tf.TransformBroadcaster()
-  # rate = rospy.Rate(20.0)
+  rate = rospy.Rate(20.0)
 
   while not rospy.is_shutdown():
     #t = rospy.Time.now().to_sec() * math.pi
@@ -39,7 +39,7 @@ def main():
     # print (type(t.position.position) , t.position.position)
     # print (type(t.position.orientation),t.position.orientation )
     br.sendTransform(pos, ori, rospy.Time.now(),"base_link","map")
-    # rate.sleep()
+    rate.sleep()
 
 
 if __name__ == '__main__':
