@@ -49,6 +49,7 @@ namespace gazebo
         void pubFunc(ignition::math::Pose3<double> actual_position)
         {
             geometry_msgs::PoseStamped msg;
+            msg.header.stamp = ros::Time(0);
             msg.header.seq = counter_msg++;
             msg.header.frame_id = "map";
             msg.pose.position.x = actual_position.Pos().X();
