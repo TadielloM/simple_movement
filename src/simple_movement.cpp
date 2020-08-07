@@ -33,8 +33,8 @@ namespace gazebo
         //Constructor
         BasicMovement()
         {
-            // gazebo_node_ = gazebo::transport::NodePtr(new gazebo::transport::Node());
-            // gazebo_node_->Init();
+            gazebo_node_ = gazebo::transport::NodePtr(new gazebo::transport::Node());
+            gazebo_node_->Init();
 
             // Make sure the ROS node for Gazebo has already been initialized
             
@@ -92,7 +92,7 @@ namespace gazebo
             
             // ros::init();
             
-            this->nh_.reset(new ros::NodeHandle("~"));
+            this->nh_.reset(new ros::NodeHandle());
             fly_to = new FlyTo(nh_);
             this->pub = nh_->advertise<geometry_msgs::PoseStamped>("/position_drone", 1);
             linear_vel = ignition::math::Vector3d(0,0,0);
