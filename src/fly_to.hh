@@ -24,7 +24,7 @@ class FlyTo
   std::shared_ptr<octomap::OcTree> ot_;
   ignition::math::Vector3d* linear_vel;
   ignition::math::Vector3d* angular_vel;
-
+  ros::Publisher vis_pub;
 
   public:
   FlyTo(std::shared_ptr<ros::NodeHandle> nh);

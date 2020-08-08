@@ -4,13 +4,43 @@
 #include <tf2/LinearMath/Matrix3x3.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <exception>
+#include <visualization_msgs/Marker.h>
+
+visualization_msgs::Marker visualize_goal(ignition::math::Pose3<double> actual_goal){
+  visualization_msgs::Marker marker;
+  marker.header.frame_id = "map";
+  marker.header.stamp = ros::Time();
+  marker.ns = "goal";
+  marker.id = 0;
+  marker.type = visualization_msgs::Marker::SPHERE;
+  marker.action = visualization_msgs::Marker::ADD;
+  marker.pose.position.x = actual_goal.Pos().X();
+  marker.pose.position.y = actual_goal.Pos().Y();
+  marker.pose.position.z = actual_goal.Pos().Z();
+  marker.pose.orientation.x = 0.0;
+  marker.pose.orientation.y = 0.0;
+  marker.pose.orientation.z = 0.0;
+  marker.pose.orientation.w = 1.0;
+  marker.scale.x = 0.2;
+  marker.scale.y = 0.2;
+  marker.scale.z = 0.2;
+  marker.color.a = 1.0; // Don't forget to set the alpha!
+  marker.color.r = 0.0;
+  marker.color.g = 1.0;
+  marker.color.b = 0.0;
+  marker.lifetime =ros::Duration(10);
+  //only if using a MESH_RESOURCE marker type:
+  // marker.mesh_resource = "package://pr2_description/meshes/base_v0/base.dae";
+  return marker;
+}
 
 FlyTo::FlyTo(std::shared_ptr<ros::NodeHandle> nh) :
     nh_(nh),
     pub_(nh_->advertise<geometry_msgs::PoseStamped>("fly_to_cmd", 1000)), as_(*nh_, "fly_to", 
     boost::bind(&FlyTo::execute, this, _1, &as_), false),
     octomap_sub_(nh_->subscribe("octomap_full", 1, &FlyTo::octomapCallback,this)),
-    ot_(NULL)
+    ot_(NULL),
+    vis_pub(nh_->advertise<visualization_msgs::Marker>( "goal_to_reach", 0 ))
 {
   // ROS_INFO("Starting fly to server");
   as_.start();
@@ -62,6 +92,8 @@ void FlyTo::execute(const simple_movement::FlyToGoalConstPtr &goal,
   actual_goal.Pos().X() = goal->pose.pose.position.x;
   actual_goal.Pos().Y() = goal->pose.pose.position.y;
   actual_goal.Pos().Z() = goal->pose.pose.position.z;
+  
+  vis_pub.publish(visualize_goal(actual_goal));
 
   tf2::Quaternion quat;
 
