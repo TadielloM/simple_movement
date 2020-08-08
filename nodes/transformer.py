@@ -10,10 +10,18 @@ class transformer:
   angle = 0
 
   def callback(self,data):
+    br = tf.TransformBroadcaster()
     self.angle = data.data
+    quaternion = tf.transformations.quaternion_from_euler(self.angle, 0, 0, 'sxyz')
+
+    br.sendTransform((0.175, 0.0, 0.0485),quaternion,rospy.Time.now(),"velodyne_base","base_link")
 
   def position_callback(self,data):
+    br = tf.TransformBroadcaster()
     self.position = data.pose
+    pos = (self.position.position.x,self.position.position.y,self.position.position.z) 
+    ori = (self.position.orientation.x,self.position.orientation.y,self.position.orientation.z,self.position.orientation.w)
+    br.sendTransform(pos, ori, rospy.Time.now(),"base_link","map")
 
   def __init__(self):
     self.position = Pose()
@@ -23,24 +31,21 @@ class transformer:
 def main():
   rospy.init_node('transformer')
   t = transformer()
+  rospy.spin()
 
-  br = tf.TransformBroadcaster()
-  rate = rospy.Rate(20.0)
 
-  while not rospy.is_shutdown():
+  # br = tf.TransformBroadcaster()
+  # rate = rospy.Rate(10.0)
+
+  # while not rospy.is_shutdown():
     #t = rospy.Time.now().to_sec() * math.pi
     #rospy.loginfo(t.angle)
     # print("Sending transform for velodyne_base")
-    quaternion = tf.transformations.quaternion_from_euler(t.angle, 0, 0, 'sxyz')
     #rospy.loginfo(quaternion)
-    br.sendTransform((0.175, 0.0, 0.0485),quaternion,rospy.Time.now(),"velodyne_base","base_link")
-    rate.sleep()
-    pos = (t.position.position.x,t.position.position.y,t.position.position.z) 
-    ori = (t.position.orientation.x,t.position.orientation.y,t.position.orientation.z,t.position.orientation.w)
-    # print (type(t.position.position) , t.position.position)
-    # print (type(t.position.orientation),t.position.orientation )
-    br.sendTransform(pos, ori, rospy.Time.now(),"base_link","map")
-
+    
+    
+    
+    # rate.sleep()
 
 if __name__ == '__main__':
   main()

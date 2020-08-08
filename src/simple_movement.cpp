@@ -33,8 +33,8 @@ namespace gazebo
         //Constructor
         BasicMovement()
         {
-            // gazebo_node_ = gazebo::transport::NodePtr(new gazebo::transport::Node());
-            // gazebo_node_->Init();
+            gazebo_node_ = gazebo::transport::NodePtr(new gazebo::transport::Node());
+            gazebo_node_->Init();
 
             // Make sure the ROS node for Gazebo has already been initialized
             
@@ -49,6 +49,7 @@ namespace gazebo
         void pubFunc(ignition::math::Pose3<double> actual_position)
         {
             geometry_msgs::PoseStamped msg;
+            msg.header.stamp = ros::Time(0);
             msg.header.seq = counter_msg++;
             msg.header.frame_id = "map";
             msg.pose.position.x = actual_position.Pos().X();
@@ -92,14 +93,14 @@ namespace gazebo
             
             // ros::init();
             
-            this->nh_.reset(new ros::NodeHandle("~"));
+            this->nh_.reset(new ros::NodeHandle());
             fly_to = new FlyTo(nh_);
             this->pub = nh_->advertise<geometry_msgs::PoseStamped>("/position_drone", 1);
             linear_vel = ignition::math::Vector3d(0,0,0);
             angular_vel =ignition::math::Vector3d(0,0,0);
             fly_to->setModel(this->model);
             fly_to->setVelocitiesPointer(&linear_vel,&angular_vel);
-            ros::Rate(20);
+            // ros::Rate(20);
             std::cout<< "URI: " <<ros::master::getURI() << std::endl;
             std::cout<< " The Namespace is: " << nh_->getNamespace() <<std::endl;
             std::vector< std::string > nodes;
@@ -119,7 +120,7 @@ namespace gazebo
             this->model->SetLinearVel(linear_vel);
             this->model->SetAngularVel(angular_vel);
             pubFunc(actual_position);
-            ros::spinOnce();
+            // ros::spinOnce();
             
         }
 
