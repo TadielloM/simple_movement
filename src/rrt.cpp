@@ -174,8 +174,7 @@ Eigen::Vector4d RRT::sampleNewPoint()
   return point;
 }
 
-std::shared_ptr<RRT> RRT::chooseParent(const value_rtree& rrt_rtree, std::shared_ptr<point_rtree> octomap_rtree,
-                                                    std::shared_ptr<RRT> node)
+std::shared_ptr<RRT> RRT::chooseParent(const value_rtree& rrt_rtree, std::shared_ptr<point_rtree> octomap_rtree, std::shared_ptr<RRT> node)
 {
   // Find nearest neighbour
   std::vector<value> nearest;

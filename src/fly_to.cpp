@@ -141,6 +141,7 @@ void FlyTo::execute(const simple_movement::FlyToGoalConstPtr &goal,
   std::shared_ptr<point_rtree> octomap_rtree = std::make_shared<point_rtree>(getRtree(ot_, min, max));
   nav_msgs::Path path_to_goal = root_->findTrajectory(ot_,octomap_rtree,&rrt_rtree,current_state,state_to_reach);
   // std::cout << "drone " <<nh_.get()<<std::endl;
+
   // Check if target is reached...
   for(int i=0; i<path_to_goal.poses.size();i++){
     actual_goal.Pos().X() = path_to_goal.poses[i].pose.position.x;
@@ -155,6 +156,7 @@ void FlyTo::execute(const simple_movement::FlyToGoalConstPtr &goal,
       ignition::math::Vector3<double> eulers = actual_position.Rot().Euler();
       // std::cout << eulers << std::endl;
 
+      //Setting linear velocity (smaller id closer to goal)
       ignition::math::Vector3d velocity;
       if(actual_position.Pos().Distance(actual_goal.Pos()) > 0.6){
         velocity = (actual_goal.Pos() - actual_position.Pos()).Normalize() * 5;
@@ -167,13 +169,15 @@ void FlyTo::execute(const simple_movement::FlyToGoalConstPtr &goal,
       // std:cout<<"The velocity is: "<< *linear_vel<<std::endl;
 
       // ROS_INFO_STREAM("Distance to goal: " << actual_position.Pos().Distance(actual_goal.Pos()));
+
+      //setting angular velocity
       roll_diff = goal_roll - eulers[0];
       pitch_diff = goal_pitch - eulers[1];
       yaw_diff = goal_yaw - eulers[2];
       ignition::math::Vector3d angular_velocity((roll_diff>=goal->yaw_converged?1:0)*2,(pitch_diff>=goal->yaw_converged?1:0)*2,(yaw_diff>=goal->yaw_converged?1:0)*2);
       *angular_vel = angular_velocity;
 
-    } while (actual_position.Pos().Distance(actual_goal.Pos()) > goal->distance_converged);
+    } while (actual_position.Pos().Distance(actual_goal.Pos()) > goal->distance_converged); //TODO Check also when angle converge
   }
 
   *linear_vel =ignition::math::Vector3d(0,0,0);
