@@ -161,7 +161,7 @@ target_link_libraries(_simple_movement
   FlyTo
   RRT
 )
-add_dependencies(_simple_movement ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(_simple_movement ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${catkin_LIBRARIES})
 
 
 ## Add cmake target dependencies of the library
