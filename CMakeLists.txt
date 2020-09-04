@@ -1,3 +1,4 @@
+
 cmake_minimum_required(VERSION 2.8.3)
 project(simple_movement)
 
@@ -150,6 +151,9 @@ target_link_libraries(RRT
   ${OCTOMAP_LIBRARIES}
 )
 
+add_dependencies(FlyTo ${${PROJECT_NAME}_EXPORTED_TARGETS})
+
+
 
 ## Declare a C++ library
 add_library( _simple_movement
@@ -161,7 +165,7 @@ target_link_libraries(_simple_movement
   FlyTo
   RRT
 )
-add_dependencies(_simple_movement ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${catkin_LIBRARIES})
+add_dependencies(_simple_movement ${${PROJECT_NAME}_EXPORTED_TARGETS})
 
 
 ## Add cmake target dependencies of the library
