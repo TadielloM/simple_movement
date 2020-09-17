@@ -8,20 +8,18 @@ from geometry_msgs.msg import PoseStamped,Pose
 class transformer:
 
   angle = 0
+  br = tf.TransformBroadcaster()
 
   def callback(self,data):
-    br = tf.TransformBroadcaster()
     self.angle = data.data
     quaternion = tf.transformations.quaternion_from_euler(self.angle, 0, 0, 'sxyz')
-
-    br.sendTransform((0.175, 0.0, 0.0485),quaternion,rospy.Time.now(),"velodyne_base","base_link")
+    self.br.sendTransform((0.175, 0.0, 0.0485),quaternion,rospy.Time.now(),"velodyne_base","base_link")
 
   def position_callback(self,data):
-    br = tf.TransformBroadcaster()
     self.position = data.pose
     pos = (self.position.position.x,self.position.position.y,self.position.position.z) 
     ori = (self.position.orientation.x,self.position.orientation.y,self.position.orientation.z,self.position.orientation.w)
-    br.sendTransform(pos, ori, rospy.Time.now(),"base_link","map")
+    self.br.sendTransform(pos, ori, rospy.Time.now(),"base_link","map")
 
   def __init__(self):
     self.position = Pose()
