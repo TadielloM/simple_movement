@@ -20,6 +20,7 @@ class FlyTo
   ros::Publisher pub_;
   ros::Subscriber octomap_sub_;
   actionlib::SimpleActionServer<simple_movement::FlyToAction> as_;
+  simple_movement::FlyToResult result_;
   gazebo::physics::ModelPtr model;
   std::shared_ptr<octomap::OcTree> ot_;
   ignition::math::Vector3d* linear_vel;

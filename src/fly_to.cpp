@@ -182,6 +182,7 @@ void FlyTo::execute(const simple_movement::FlyToGoalConstPtr &goal,
 
   *linear_vel =ignition::math::Vector3d(0,0,0);
   *angular_vel = ignition::math::Vector3d(0,0,0);
-  as->setSucceeded();
+  this->result_.steps = int(path_to_goal.poses.size());
+  as->setSucceeded(this->result_);
 }
 

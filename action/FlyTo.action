@@ -4,6 +4,7 @@ float32 distance_converged
 float32 yaw_converged
 ---
 # Define the result
+int8 steps
 ---
 # Define a feedback message
 float32 distance_to_target
